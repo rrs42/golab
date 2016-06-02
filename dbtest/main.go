@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"dbtest/testdb"
-
 	"github.com/fatih/color"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -116,9 +114,15 @@ func main() {
 	fmt.Printf("Rows in db: %s\n", red(countRows(db)))
 
 	fmt.Println("Testing testdb")
-	db1, err := testdb.New()
+	db1, err := NewTestDB()
 	db1.Init()
 	db1.InsertNew("Jeb", now.Unix())
 	db1.InsertNew("Bill", now.Unix())
 	fmt.Println(db1.Count())
+
+	i := func(id int, name string, ts int64) {
+		fmt.Println(id, name, ts)
+	}
+
+	db1.Iterate(i)
 }

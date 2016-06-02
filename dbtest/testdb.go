@@ -1,4 +1,4 @@
-package testdb
+package main
 
 import (
 	"database/sql"
@@ -13,14 +13,15 @@ type TestDB struct {
 }
 
 /* New() */
-func New() (*TestDB, error) {
-	var n TestDB
+func NewTestDB() (*TestDB, error) {
 	var err error
+
+	n := new(TestDB)
 
 	n.db, err = sql.Open("sqlite3", "test.db")
 	fmt.Println("Init DB")
 	n.next = 0
-	return &n, err
+	return n, err
 }
 
 /* (*TestDB) Clear() error */
@@ -67,4 +68,27 @@ func (db *TestDB) Count() int {
 	}
 
 	return count
+}
+
+type rowiter func(id int, name string, ts int64)
+
+func (db *TestDB) Iterate(fn rowiter) {
+	stmt := "SELECT id, name, ts FROM test"
+	rows, err := db.db.Query(stmt)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for rows.Next() {
+		var id int
+		var name string
+		var ts int64
+
+		err := rows.Scan(&id, &name, &ts)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		fn(id, name, ts)
+	}
 }
