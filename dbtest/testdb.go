@@ -24,6 +24,10 @@ func NewTestDB() (*TestDB, error) {
 	return n, err
 }
 
+func (db *TestDB) Close() {
+	db.db.Close()
+}
+
 /* (*TestDB) Clear() error */
 func (db *TestDB) Clear() error {
 	stmt := "DROP TABLE IF EXISTS test"
@@ -70,9 +74,9 @@ func (db *TestDB) Count() int {
 	return count
 }
 
-type rowiter func(id int, name string, ts int64)
+type row_iter func(id int, name string, ts int64)
 
-func (db *TestDB) Iterate(fn rowiter) {
+func (db *TestDB) Iterate(fn row_iter) {
 	stmt := "SELECT id, name, ts FROM test"
 	rows, err := db.db.Query(stmt)
 	if err != nil {

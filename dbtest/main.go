@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/fatih/color"
@@ -92,36 +94,38 @@ func queryRows(db *sql.DB) {
 func main() {
 	red := color.New(color.FgRed).SprintFunc()
 
-	db := connectDB("sqlite3", "test.db")
-	defer db.Close()
-
-	err := dropTable(db)
-	if err != nil {
-		panic(err.Error())
-	}
-	err = createTable(db)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	fmt.Printf("Rows in db: %s\n", red(countRows(db)))
-
 	now := time.Now()
-	insertRows(db, 10, "Bob", now.Unix())
-
-	queryRows(db)
-
-	fmt.Printf("Rows in db: %s\n", red(countRows(db)))
 
 	fmt.Println("Testing testdb")
 	db1, err := NewTestDB()
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db1.Close()
 	db1.Init()
 	db1.InsertNew("Jeb", now.Unix())
 	db1.InsertNew("Bill", now.Unix())
 	fmt.Println(db1.Count())
 
 	i := func(id int, name string, ts int64) {
-		fmt.Println(id, name, ts)
+		type Entry struct {
+			Id   int
+			Name string
+			Ts   int64
+		}
+
+		entry := Entry{id, name, ts}
+
+		if entry.Id == 1 {
+			entry.Name = red(entry.Name)
+		}
+
+		tmpl, err := template.New("test").Parse("ID: {{.Id}} Name: {{.Name}} Timestamp: {{.Ts}}\n")
+		if err != nil {
+			panic(err)
+		}
+		err = tmpl.Execute(os.Stdout, entry)
+		// fmt.Println(id, name, ts)
 	}
 
 	db1.Iterate(i)
