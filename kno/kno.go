@@ -6,10 +6,14 @@
 
 package main
 
-import "os"
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
 
 func main() {
-
+	openSaveFile("persistent.sfs")
 }
 
 func openSaveFile(fname string) {
@@ -17,6 +21,18 @@ func openSaveFile(fname string) {
 	if err != nil {
 		panic(err.Error())
 	}
+	defer f.Close()
 
-	_ = f
+	scanner := bufio.NewScanner(f)
+	scanner.Split(bufio.ScanWords)
+
+	var prevToken string
+	for scanner.Scan() {
+		token := scanner.Text()
+		if token == "{" {
+			fmt.Print(prevToken)
+		} else {
+			prevToken = token
+		}
+	}
 }
