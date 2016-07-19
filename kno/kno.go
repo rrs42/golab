@@ -10,13 +10,24 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+
+	"github.com/emirpasic/gods/sets/hashset"
+	"github.com/emirpasic/gods/stacks/linkedliststack"
 )
 
 func main() {
-	openSaveFile("persistent.sfs")
+	keySections := hashset.New()
+
+	keySections.Add("GAME")
+	keySections.Add("VESSEL")
+	keySections.Add("ROSTER")
+
+	openSaveFile("persistent.sfs", keySections)
 }
 
-func openSaveFile(fname string) {
+func openSaveFile(fname string, keywords *hashset.Set) {
+	s := linkedliststack.New()
+
 	f, err := os.Open(fname)
 	if err != nil {
 		panic(err.Error())
@@ -29,10 +40,16 @@ func openSaveFile(fname string) {
 	var prevToken string
 	for scanner.Scan() {
 		token := scanner.Text()
-		if token == "{" {
-			fmt.Print(prevToken)
+		if token == "{" && keywords.Contains(prevToken) {
+			s.Push(prevToken)
+		} else if token == "}" {
+			frame, _ := s.Pop()
+			fmt.Println(frame)
 		} else {
 			prevToken = token
 		}
 	}
+
+	fmt.Println("\nLast Token")
+	fmt.Print(s)
 }
